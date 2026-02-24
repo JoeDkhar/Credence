@@ -4,7 +4,7 @@ import Image from "next/image";
 const Layout = ({children}:{children : React.ReactNode}) => {
     return (
         <main className="auth-layout">
-            <section className="auth-left-section scroll-bar-hide-default">
+            <section className="auth-left-section scrollbar-hide-default">
                 <Link href="/" className="auth-logo">
                     <Image src="/assets/icons/logo.svg" alt="Credence logo" width={140} height={32} className="h-8 w-auto" />
                 </Link>
