@@ -1,28 +1,48 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Star, Trash2 } from 'lucide-react';
+import { Star, Trash2, BellRing, BellPlus } from 'lucide-react';
 import { addToWatchlist, removeFromWatchlist } from '@/lib/actions/watchlist.actions';
 import { useDebounce } from '@/hooks/useDebounce';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
+
+interface WatchlistButtonProps {
+    symbol: string;
+    company?: string;
+    companyName?: string;
+    userId?: string;
+    isInWatchlist: boolean;
+    hasAlert?: boolean;
+    onAddAlert?: () => void;
+    type?: 'button' | 'icon';
+    showTrashIcon?: boolean;
+    onWatchlistChange?: (symbol: string, added: boolean) => void;
+}
 
 const WatchlistButton = ({
     symbol,
     company,
+    companyName,
+    userId,
     isInWatchlist,
+    hasAlert = false,
+    onAddAlert,
     type = 'button',
     showTrashIcon = false,
     onWatchlistChange,
 }: WatchlistButtonProps) => {
+    // Use whichever name prop is provided
+    const resolvedName = companyName || company || symbol;
+
     const [added, setAdded] = useState<boolean>(!!isInWatchlist);
 
     const toggleWatchlist = async () => {
-        // If state changed relative to original status
         if (added === !!isInWatchlist) return;
 
         try {
             if (added) {
-                const res = await addToWatchlist(symbol, company);
+                const res = await addToWatchlist(symbol, resolvedName);
                 if (res.success) {
                     toast.success(res.message);
                     onWatchlistChange?.(symbol, true);
@@ -40,7 +60,6 @@ const WatchlistButton = ({
             }
         } catch (error) {
             console.error('Watchlist error:', error);
-            // toast.error('An error occurred');
         }
     };
 
@@ -52,7 +71,6 @@ const WatchlistButton = ({
         setAdded((prev) => !prev);
     };
 
-    // Effect to trigger the debounced action whenever local state changes
     useEffect(() => {
         if (added !== !!isInWatchlist) {
             debouncedToggle();
@@ -61,14 +79,38 @@ const WatchlistButton = ({
 
     if (type === 'icon') {
         return (
-            <button
-                onClick={handleClick}
-                className={`watchlist-icon-btn ${added ? 'watchlist-icon-added' : ''}`}
-            >
-                <div className="watchlist-icon">
-                    <Star className="star-icon" fill={added ? 'currentColor' : 'none'} />
-                </div>
-            </button>
+            <div className="flex items-center gap-2">
+                {/* Only render Set Alert button if onAddAlert is provided */}
+                {onAddAlert && (
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            onAddAlert();
+                        }}
+                        className={cn(
+                            'add-alert',
+                            hasAlert && 'text-teal-400 border-teal-400/30'
+                        )}
+                    >
+                        {hasAlert ? (
+                            <BellRing className="h-4 w-4" />
+                        ) : (
+                            <BellPlus className="h-4 w-4" />
+                        )}
+                        <span>{hasAlert ? 'Alert Set' : 'Set Alert'}</span>
+                    </button>
+                )}
+
+                <button
+                    onClick={handleClick}
+                    className={`watchlist-icon-btn ${added ? 'watchlist-icon-added' : ''}`}
+                >
+                    <div className="watchlist-icon">
+                        <Star className="star-icon" fill={added ? 'currentColor' : 'none'} />
+                    </div>
+                </button>
+            </div>
         );
     }
 
