@@ -98,27 +98,27 @@ export async function getNews(symbols?: string[]): Promise<MarketNewsArticle[]> 
     }
 }
 
+import { auth } from "@/lib/better-auth/auth";
+import { headers } from "next/headers";
+import { getWatchlistSymbolsByEmail } from "@/lib/actions/watchlist.actions";
+
 export const searchStocks = cache(async (query?: string): Promise<StockWithWatchlistStatus[]> => {
     try {
         const token = process.env.FINNHUB_API_KEY ?? NEXT_PUBLIC_FINNHUB_API_KEY;
         if (!token) {
-            // If no token, log and return empty to avoid throwing per requirements
             console.error('Error in stock search:', new Error('FINNHUB API key is not configured'));
             return [];
         }
 
         const trimmed = typeof query === 'string' ? query.trim() : '';
-
         let results: FinnhubSearchResult[] = [];
 
         if (!trimmed) {
-            // Fetch top 10 popular symbols' profiles
             const top = POPULAR_STOCK_SYMBOLS.slice(0, 10);
             const profiles = await Promise.all(
                 top.map(async (sym) => {
                     try {
                         const url = `${FINNHUB_BASE_URL}/stock/profile2?symbol=${encodeURIComponent(sym)}&token=${token}`;
-                        // Revalidate every hour
                         const profile = await fetchJSON<any>(url, 3600);
                         return { sym, profile } as { sym: string; profile: any };
                     } catch (e) {
@@ -140,10 +140,7 @@ export const searchStocks = cache(async (query?: string): Promise<StockWithWatch
                         displaySymbol: symbol,
                         type: 'Common Stock',
                     };
-                    // We don't include exchange in FinnhubSearchResult type, so carry via mapping later using profile
-                    // To keep pipeline simple, attach exchange via closure map stage
-                    // We'll reconstruct exchange when mapping to final type
-                    (r as any).__exchange = exchange; // internal only
+                    (r as any).__exchange = exchange;
                     return r;
                 })
                 .filter((x): x is FinnhubSearchResult => Boolean(x));
@@ -151,6 +148,17 @@ export const searchStocks = cache(async (query?: string): Promise<StockWithWatch
             const url = `${FINNHUB_BASE_URL}/search?q=${encodeURIComponent(trimmed)}&token=${token}`;
             const data = await fetchJSON<FinnhubSearchResponse>(url, 1800);
             results = Array.isArray(data?.result) ? data.result : [];
+        }
+
+        // --- Watchlist status wiring ---
+        let userWatchlistSymbols: string[] = [];
+        try {
+            const session = await auth!.api.getSession({ headers: await headers() });
+            if (session?.user?.email) {
+                userWatchlistSymbols = await getWatchlistSymbolsByEmail(session.user.email);
+            }
+        } catch (e) {
+            console.error('Error fetching watchlist symbols for search:', e);
         }
 
         const mapped: StockWithWatchlistStatus[] = results
@@ -161,14 +169,13 @@ export const searchStocks = cache(async (query?: string): Promise<StockWithWatch
                 const exchangeFromProfile = (r as any).__exchange as string | undefined;
                 const exchange = exchangeFromDisplay || exchangeFromProfile || 'US';
                 const type = r.type || 'Stock';
-                const item: StockWithWatchlistStatus = {
+                return {
                     symbol: upper,
                     name,
                     exchange,
                     type,
-                    isInWatchlist: false,
-                };
-                return item;
+                    isInWatchlist: userWatchlistSymbols.includes(upper),
+                } as StockWithWatchlistStatus;
             })
             .slice(0, 15);
 
@@ -176,5 +183,46 @@ export const searchStocks = cache(async (query?: string): Promise<StockWithWatch
     } catch (err) {
         console.error('Error in stock search:', err);
         return [];
+    }
+});
+
+import { formatPrice, formatChangePercent, formatMarketCapValue } from "@/lib/utils";
+
+export const getStocksDetails = cache(async (symbol: string) => {
+    try {
+        const token = process.env.FINNHUB_API_KEY ?? NEXT_PUBLIC_FINNHUB_API_KEY;
+        const upper = symbol.toUpperCase();
+
+        const [quoteData, profileData, metricsData] = await Promise.all([
+            fetchJSON<QuoteData>(`${FINNHUB_BASE_URL}/quote?symbol=${upper}&token=${token}`, 60),
+            fetchJSON<ProfileData>(`${FINNHUB_BASE_URL}/stock/profile2?symbol=${upper}&token=${token}`, 3600),
+            fetchJSON<FinancialsData>(`${FINNHUB_BASE_URL}/stock/metric?symbol=${upper}&metric=all&token=${token}`, 3600),
+        ]);
+
+        if (!quoteData?.c || !profileData?.name) {
+            return null;
+        }
+
+        const currentPrice = quoteData.c;
+        const changePercent = quoteData.dp ?? 0;
+        const peRatio = metricsData?.metric?.peBasicExclExtra?.toFixed(2) || 'N/A';
+        // marketCapitalization is in millions in ProfileData (or not?) 
+        // Let's check Finnhub docs for ProfileData.marketCapitalization
+        // Usually it's in millions.
+        const marketCap = profileData.marketCapitalization ? profileData.marketCapitalization * 1e6 : 0;
+
+        return {
+            symbol: upper,
+            company: profileData.name,
+            currentPrice,
+            priceFormatted: formatPrice(currentPrice),
+            changeFormatted: formatChangePercent(changePercent),
+            changePercent,
+            peRatio,
+            marketCapFormatted: formatMarketCapValue(marketCap),
+        };
+    } catch (err) {
+        console.error('getStocksDetails error:', err);
+        return null;
     }
 });
