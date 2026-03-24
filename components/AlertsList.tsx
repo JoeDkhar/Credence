@@ -47,12 +47,14 @@ const AlertsList = ({ alerts }: AlertsListProps) => {
                                         <p className="alert-company">{alert.companyName}</p>
                                     </div>
                                     <div className="flex flex-col items-end gap-1">
-                                        <span className="alert-price">${alert.targetPrice.toFixed(2)}</span>
+                                        <span className="alert-price">
+                                            {typeof alert.targetPrice === 'number' ? `$${alert.targetPrice.toFixed(2)}` : '—'}
+                                        </span>
                                         <span className={cn(
                                             "text-xs px-2 py-0.5 rounded font-medium",
-                                            alert.status === 'active' 
-                                              ? "bg-[#FDD458]/20 text-[#FDD458]" 
-                                              : "bg-teal-400/20 text-teal-400"
+                                            alert.status === 'active'
+                                                ? "bg-[#FDD458]/20 text-[#FDD458]"
+                                                : "bg-teal-400/20 text-teal-400"
                                         )}>
                                             {alert.status === 'active' ? 'Pending' : 'Triggered'}
                                         </span>
@@ -62,10 +64,10 @@ const AlertsList = ({ alerts }: AlertsListProps) => {
                                 {/* Alert meta */}
                                 <div className="alert-actions">
                                     <div className="text-sm text-gray-500 capitalize">
-                                        {alert.alertType === 'above' ? '↑ Above' : '↓ Below'} · {alert.condition}
+                                        {(alert.alertType.endsWith('_above') || alert.alertType.endsWith('_up') ? '↑ Above/Up' : '↓ Below/Down')} · {alert.condition}
                                     </div>
                                     <div className="flex items-center gap-1">
-                                        <button 
+                                        <button
                                             className="alert-delete-btn p-1.5"
                                             onClick={() => handleDelete(alert._id)}
                                             disabled={isPending}
