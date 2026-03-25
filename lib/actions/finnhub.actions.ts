@@ -22,7 +22,7 @@ export { fetchJSON };
 // Small helper to avoid hammering the free-tier rate limit
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-export async function getNews(symbols?: string[]): Promise<MarketNewsArticle[]> {
+export async function getNews(symbols?: string[], limit: number = 6): Promise<MarketNewsArticle[]> {
     try {
         const range = getDateRange(5);
         const token = process.env.FINNHUB_API_KEY ?? NEXT_PUBLIC_FINNHUB_API_KEY;
@@ -32,7 +32,7 @@ export async function getNews(symbols?: string[]): Promise<MarketNewsArticle[]> 
             .map((s) => s?.trim().toUpperCase())
             .filter((s): s is string => Boolean(s));
 
-        const maxArticles = 6;
+        const maxArticles = limit;
 
         if (cleanSymbols.length > 0) {
             const perSymbolArticles: Record<string, RawNewsArticle[]> = {};
@@ -50,13 +50,18 @@ export async function getNews(symbols?: string[]): Promise<MarketNewsArticle[]> 
             );
 
             const collected: MarketNewsArticle[] = [];
-            for (let round = 0; round < maxArticles; round++) {
+            const seenIds = new Set<number>();
+            for (let round = 0; round < maxArticles * 2; round++) {
                 for (let i = 0; i < cleanSymbols.length; i++) {
                     const sym = cleanSymbols[i];
                     const list = perSymbolArticles[sym] || [];
                     if (list.length === 0) continue;
                     const article = list.shift();
-                    if (!article || !validateArticle(article)) continue;
+                    if (!article || !validateArticle(article) || !article.id) continue;
+                    
+                    if (seenIds.has(article.id)) continue;
+                    seenIds.add(article.id);
+                    
                     collected.push(formatArticle(article, true, sym, round));
                     if (collected.length >= maxArticles) break;
                 }
@@ -71,15 +76,14 @@ export async function getNews(symbols?: string[]): Promise<MarketNewsArticle[]> 
 
         const generalUrl = `${FINNHUB_BASE_URL}/news?category=general&token=${token}`;
         const general = await fetchJSON<RawNewsArticle[]>(generalUrl, 300);
-        const seen = new Set<string>();
         const unique: RawNewsArticle[] = [];
+        const seenGeneralIds = new Set<number>();
         for (const art of general || []) {
-            if (!validateArticle(art)) continue;
-            const key = `${art.id}-${art.url}-${art.headline}`;
-            if (seen.has(key)) continue;
-            seen.add(key);
+            if (!validateArticle(art) || !art.id) continue;
+            if (seenGeneralIds.has(art.id)) continue;
+            seenGeneralIds.add(art.id);
             unique.push(art);
-            if (unique.length >= 20) break;
+            if (unique.length >= limit * 2) break;
         }
         return unique.slice(0, maxArticles).map((a, idx) => formatArticle(a, false, undefined, idx));
     } catch (err) {

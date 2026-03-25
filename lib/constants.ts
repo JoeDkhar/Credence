@@ -2,6 +2,7 @@ export const NAV_ITEMS = [
     { href: '/', label: 'Dashboard' },
     { href: '/search', label: 'Search' },
      { href: '/watchlist', label: 'Watchlist' },
+    { href: '/news', label: 'News' },
 ];
 
 // Sign-up form select options
@@ -114,6 +115,21 @@ export const HEATMAP_WIDGET_CONFIG = {
     height: '600',
 };
 
+export const TICKER_TAPE_WIDGET_CONFIG = {
+  symbols: [
+    { proName: "FOREXCOM:SPX500", title: "S&P 500" },
+    { proName: "FOREXCOM:NSXUSD", title: "US 100" },
+    { proName: "FX_IDC:EURUSD", title: "EUR/USD" },
+    { proName: "BITSTAMP:BTCUSD", title: "Bitcoin" },
+    { proName: "BITSTAMP:ETHUSD", title: "Ethereum" }
+  ],
+  showSymbolLogo: true,
+  isTransparent: true,
+  displayMode: "adaptive",
+  colorTheme: "dark",
+  locale: "en"
+};
+
 export const TOP_STORIES_WIDGET_CONFIG = {
     displayMode: 'regular',
     feedMode: 'market',
@@ -123,6 +139,26 @@ export const TOP_STORIES_WIDGET_CONFIG = {
     market: 'stock',
     width: '100%',
     height: '600',
+};
+
+export const MARKET_QUOTES_WIDGET_CONFIG = {
+  width: "100%",
+  height: 600,
+  symbols: [
+    { name: "SAXO:SPX", displayName: "S&P 500" },
+    { name: "NASDAQ:IXIC", displayName: "Nasdaq 100" },
+    { name: "DJI:DJI", displayName: "Dow Jones" },
+    { name: "TVC:GOLD", displayName: "Gold" },
+    { name: "TVC:USOIL", displayName: "WTI Crude Oil" },
+    { name: "TVC:DE10Y", displayName: "Euro Bund" },
+    { name: "FX_IDC:EURUSD", displayName: "EUR/USD" },
+    { name: "FX_IDC:GBPUSD", displayName: "GBP/USD" }
+  ],
+  showSymbolLogo: true,
+  colorTheme: "dark",
+  isTransparent: false,
+  backgroundColor: "#0F0F0F",
+  locale: "en"
 };
 
 export const MARKET_DATA_WIDGET_CONFIG = {
