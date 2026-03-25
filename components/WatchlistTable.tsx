@@ -25,8 +25,8 @@ export function WatchlistTable({ watchlist }: WatchlistTableProps) {
 
     return (
         <>
-            <div className="watchlist-table">
-                <Table className="table-fixed w-full">
+            <div className="w-full overflow-x-auto pb-4 scrollbar-hide bg-[#050505]">
+                <Table className="table-fixed min-w-[900px] w-full bg-[#050505]">
                     <colgroup>
                         <col className="w-[30%]" />
                         <col className="w-[12%]" />
