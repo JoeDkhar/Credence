@@ -1,8 +1,37 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Credence - Your Ultimate Stock Market Toolkit
+
+![Credence Dashboard](./public/assets/images/dashboard.png)
+
+Credence is a high-performance, dark-themed financial dashboard built with Next.js 15. It integrates real-time stock data, market heatmaps, and advanced TradingView widgets to provide a premium experience for modern investors.
+
+## Key Features
+
+- **Advanced Market Visualization**: Interactive heatmaps, technical charts, and company profiles powered by TradingView.
+- **Smart News Summaries**: Daily AI-curated news summaries and top stories to keep you ahead of the market.
+- **Custom Watchlists**: High-density data tables to monitor your portfolio at a glance.
+- **Automated Price Alerts**: Responsive monitoring with minute-by-minute alert triggers via Inngest.
+- **Premium UI/UX**: A curated dark-mode aesthetic (#050505) with professional typography using Geist Sans.
+
+## Tech Stack
+
+- **Framework**: Next.js 15 (App Router)
+- **Styling**: Vanilla CSS and Tailwind components
+- **Database**: MongoDB
+- **Workflows**: Inngest for background jobs and cron monitoring
+- **Data Layer**: Finnhub API and TradingView Embedded Widgets
+- **Email**: NodeMailer with Gmail integration
 
 ## Getting Started
 
-First, run the development server:
+First, install the dependencies:
+
+```bash
+npm install
+```
+
+Second, configure your environment variables in a .env file (see .env.example if available).
+
+Finally, run the development server:
 
 ```bash
 npm run dev
@@ -14,23 +43,7 @@ pnpm dev
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000 with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+© 2026 Credence. All rights reserved.
