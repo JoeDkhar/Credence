@@ -16,6 +16,7 @@ import { getChangeColorClass } from '@/lib/utils';
 
 interface WatchlistTableProps {
     watchlist: any[];
+    initialStocks?: any[]; // kept optional for backwards compat, no longer used here
 }
 
 export function WatchlistTable({ watchlist }: WatchlistTableProps) {

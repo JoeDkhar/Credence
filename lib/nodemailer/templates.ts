@@ -314,3 +314,38 @@ export const INACTIVE_USER_REMINDER_EMAIL_TEMPLATE = `<!DOCTYPE html>
     </table>
 </body>
 </html>`;
+
+export const GENERIC_ALERT_TEMPLATE = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Price Alert - Credence</title>
+    <style type="text/css">
+        @media only screen and (max-width: 600px) {
+            .email-container { width: 100% !important; margin: 0 !important; }
+            .mobile-padding { padding: 24px !important; }
+        }
+    </style>
+</head>
+<body style="margin: 0; padding: 0; background-color: #050505; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #050505;">
+        <tr>
+            <td align="center" style="padding: 40px 20px;">
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" class="email-container" style="max-width: 600px; background-color: #141414; border-radius: 8px; border: 1px solid #30333A;">
+                    <tr>
+                        <td align="left" style="padding: 40px 40px 20px 40px;">
+                            <img src="https://ik.imagekit.io/pai9aki0l/logo.png" alt="Credence Logo" width="150" style="max-width: 100%; height: auto;">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="mobile-padding" style="padding: 0 40px 40px 40px;">
+                            {{content}}
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>`;

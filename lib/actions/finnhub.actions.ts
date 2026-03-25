@@ -1,5 +1,4 @@
 'use server';
-
 import { getDateRange, validateArticle, formatArticle } from '@/lib/utils';
 import { POPULAR_STOCK_SYMBOLS } from '@/lib/constants';
 import { cache } from 'react';
@@ -11,7 +10,6 @@ async function fetchJSON<T>(url: string, revalidateSeconds?: number): Promise<T>
     const options: RequestInit & { next?: { revalidate?: number } } = revalidateSeconds
         ? { cache: 'force-cache', next: { revalidate: revalidateSeconds } }
         : { cache: 'no-store' };
-
     const res = await fetch(url, options);
     if (!res.ok) {
         const text = await res.text().catch(() => '');
@@ -19,26 +17,25 @@ async function fetchJSON<T>(url: string, revalidateSeconds?: number): Promise<T>
     }
     return (await res.json()) as T;
 }
-
 export { fetchJSON };
+
+// Small helper to avoid hammering the free-tier rate limit
+const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export async function getNews(symbols?: string[]): Promise<MarketNewsArticle[]> {
     try {
         const range = getDateRange(5);
         const token = process.env.FINNHUB_API_KEY ?? NEXT_PUBLIC_FINNHUB_API_KEY;
-        if (!token) {
-            throw new Error('FINNHUB API key is not configured');
-        }
+        if (!token) throw new Error('FINNHUB API key is not configured');
+
         const cleanSymbols = (symbols || [])
             .map((s) => s?.trim().toUpperCase())
             .filter((s): s is string => Boolean(s));
 
         const maxArticles = 6;
 
-        // If we have symbols, try to fetch company news per symbol and round-robin select
         if (cleanSymbols.length > 0) {
             const perSymbolArticles: Record<string, RawNewsArticle[]> = {};
-
             await Promise.all(
                 cleanSymbols.map(async (sym) => {
                     try {
@@ -53,7 +50,6 @@ export async function getNews(symbols?: string[]): Promise<MarketNewsArticle[]> 
             );
 
             const collected: MarketNewsArticle[] = [];
-            // Round-robin up to 6 picks
             for (let round = 0; round < maxArticles; round++) {
                 for (let i = 0; i < cleanSymbols.length; i++) {
                     const sym = cleanSymbols[i];
@@ -68,17 +64,13 @@ export async function getNews(symbols?: string[]): Promise<MarketNewsArticle[]> 
             }
 
             if (collected.length > 0) {
-                // Sort by datetime desc
                 collected.sort((a, b) => (b.datetime || 0) - (a.datetime || 0));
                 return collected.slice(0, maxArticles);
             }
-            // If none collected, fall through to general news
         }
 
-        // General market news fallback or when no symbols provided
         const generalUrl = `${FINNHUB_BASE_URL}/news?category=general&token=${token}`;
         const general = await fetchJSON<RawNewsArticle[]>(generalUrl, 300);
-
         const seen = new Set<string>();
         const unique: RawNewsArticle[] = [];
         for (const art of general || []) {
@@ -87,11 +79,9 @@ export async function getNews(symbols?: string[]): Promise<MarketNewsArticle[]> 
             if (seen.has(key)) continue;
             seen.add(key);
             unique.push(art);
-            if (unique.length >= 20) break; // cap early before final slicing
+            if (unique.length >= 20) break;
         }
-
-        const formatted = unique.slice(0, maxArticles).map((a, idx) => formatArticle(a, false, undefined, idx));
-        return formatted;
+        return unique.slice(0, maxArticles).map((a, idx) => formatArticle(a, false, undefined, idx));
     } catch (err) {
         console.error('getNews error:', err);
         throw new Error('Failed to fetch news');
@@ -115,18 +105,20 @@ export const searchStocks = cache(async (query?: string): Promise<StockWithWatch
 
         if (!trimmed) {
             const top = POPULAR_STOCK_SYMBOLS.slice(0, 10);
-            const profiles = await Promise.all(
-                top.map(async (sym) => {
-                    try {
-                        const url = `${FINNHUB_BASE_URL}/stock/profile2?symbol=${encodeURIComponent(sym)}&token=${token}`;
-                        const profile = await fetchJSON<any>(url, 3600);
-                        return { sym, profile } as { sym: string; profile: any };
-                    } catch (e) {
-                        console.error('Error fetching profile2 for', sym, e);
-                        return { sym, profile: null } as { sym: string; profile: any };
-                    }
-                })
-            );
+
+            // Sequential calls with 250ms gap to avoid 429s on the free tier
+            const profiles: { sym: string; profile: any }[] = [];
+            for (const sym of top) {
+                try {
+                    const url = `${FINNHUB_BASE_URL}/stock/profile2?symbol=${encodeURIComponent(sym)}&token=${token}`;
+                    const profile = await fetchJSON<any>(url, 3600);
+                    profiles.push({ sym, profile });
+                } catch (e) {
+                    console.error('Error fetching profile2 for', sym, e);
+                    profiles.push({ sym, profile: null });
+                }
+                await delay(250);
+            }
 
             results = profiles
                 .map(({ sym, profile }) => {
@@ -144,13 +136,14 @@ export const searchStocks = cache(async (query?: string): Promise<StockWithWatch
                     return r;
                 })
                 .filter((x): x is FinnhubSearchResult => Boolean(x));
+
         } else {
             const url = `${FINNHUB_BASE_URL}/search?q=${encodeURIComponent(trimmed)}&token=${token}`;
             const data = await fetchJSON<FinnhubSearchResponse>(url, 1800);
             results = Array.isArray(data?.result) ? data.result : [];
         }
 
-        // --- Watchlist status wiring ---
+        // Watchlist status
         let userWatchlistSymbols: string[] = [];
         try {
             const session = await auth!.api.getSession({ headers: await headers() });
@@ -161,7 +154,7 @@ export const searchStocks = cache(async (query?: string): Promise<StockWithWatch
             console.error('Error fetching watchlist symbols for search:', e);
         }
 
-        const mapped: StockWithWatchlistStatus[] = results
+        return results
             .map((r) => {
                 const upper = (r.symbol || '').toUpperCase();
                 const name = r.description || upper;
@@ -179,7 +172,6 @@ export const searchStocks = cache(async (query?: string): Promise<StockWithWatch
             })
             .slice(0, 15);
 
-        return mapped;
     } catch (err) {
         console.error('Error in stock search:', err);
         return [];
@@ -193,22 +185,16 @@ export const getStocksDetails = cache(async (symbol: string) => {
         const token = process.env.FINNHUB_API_KEY ?? NEXT_PUBLIC_FINNHUB_API_KEY;
         const upper = symbol.toUpperCase();
 
-        const [quoteData, profileData, metricsData] = await Promise.all([
+        // Removed /stock/metric — requires paid plan, causes 403
+        const [quoteData, profileData] = await Promise.all([
             fetchJSON<QuoteData>(`${FINNHUB_BASE_URL}/quote?symbol=${upper}&token=${token}`, 60),
             fetchJSON<ProfileData>(`${FINNHUB_BASE_URL}/stock/profile2?symbol=${upper}&token=${token}`, 3600),
-            fetchJSON<FinancialsData>(`${FINNHUB_BASE_URL}/stock/metric?symbol=${upper}&metric=all&token=${token}`, 3600),
         ]);
 
-        if (!quoteData?.c || !profileData?.name) {
-            return null;
-        }
+        if (!quoteData?.c || !profileData?.name) return null;
 
         const currentPrice = quoteData.c;
         const changePercent = quoteData.dp ?? 0;
-        const peRatio = metricsData?.metric?.peBasicExclExtra?.toFixed(2) || 'N/A';
-        // marketCapitalization is in millions in ProfileData (or not?) 
-        // Let's check Finnhub docs for ProfileData.marketCapitalization
-        // Usually it's in millions.
         const marketCap = profileData.marketCapitalization ? profileData.marketCapitalization * 1e6 : 0;
 
         return {
@@ -218,7 +204,7 @@ export const getStocksDetails = cache(async (symbol: string) => {
             priceFormatted: formatPrice(currentPrice),
             changeFormatted: formatChangePercent(changePercent),
             changePercent,
-            peRatio,
+            peRatio: 'N/A', // metric endpoint is paid-only; hardcode N/A for free tier
             marketCapFormatted: formatMarketCapValue(marketCap),
         };
     } catch (err) {
