@@ -15,7 +15,7 @@ export const sendWelcomeEmail = async ({ email, name, intro }: WelcomeEmailData)
         .replace('{{intro}}', intro);
 
     const mailOptions = {
-        from: `"Credence" <credence@credence.com>`,
+        from: `"Credence" <credence.financebusiness@gmail.com>`,
         to: email,
         subject: `Welcome to Credence - your stock market toolkit is ready!`,
         text: 'Thanks for joining Credence',
@@ -33,7 +33,7 @@ export const sendNewsSummaryEmail = async (
         .replace('{{newsContent}}', newsContent);
 
     const mailOptions = {
-        from: `"Credence News" <credence@credence.com>`,
+        from: `"Credence News" <credence.financebusiness@gmail.com>`,
         to: email,
         subject: `📈 Market News Summary Today - ${date}`,
         text: `Today's market news summary from Credence`,
@@ -52,7 +52,7 @@ export const sendPriceAlertEmail = async (
         .replace('{{content}}', alertContent);
 
     const mailOptions = {
-        from: `"Credence Alerts" <alerts@credence.com>`,
+        from: `"Credence Alerts" <credence.financebusiness@gmail.com>`,
         to: email,
         subject: `🚨 Price Alert Triggered for ${symbol}`,
         text: `Your price alert for ${symbol} was triggered.`,
