@@ -42,3 +42,22 @@ export const sendNewsSummaryEmail = async (
 
     await transporter.sendMail(mailOptions);
 };
+
+export const sendPriceAlertEmail = async (
+    { email, symbol, alertContent }: { email: string; symbol: string; alertContent: string }
+): Promise<void> => {
+    const { GENERIC_ALERT_TEMPLATE } = await import("@/lib/nodemailer/templates");
+    
+    const htmlTemplate = GENERIC_ALERT_TEMPLATE
+        .replace('{{content}}', alertContent);
+
+    const mailOptions = {
+        from: `"Credence Alerts" <alerts@credence.com>`,
+        to: email,
+        subject: `🚨 Price Alert Triggered for ${symbol}`,
+        text: `Your price alert for ${symbol} was triggered.`,
+        html: htmlTemplate,
+    };
+
+    await transporter.sendMail(mailOptions);
+};

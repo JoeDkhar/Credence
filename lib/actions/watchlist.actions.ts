@@ -102,22 +102,21 @@ export async function getUserWatchlist(): Promise<any[]> {
 
 export async function getWatchlistWithData(): Promise<any[]> {
     const session = await auth!.api.getSession({ headers: await headers() });
-    if (!session?.user) {
-        return [];
-    }
+    if (!session?.user) return [];
 
     const userId = session.user.id;
     try {
         await connectToDatabase();
         const watchlist = await Watchlist.find({ userId }).sort({ addedAt: -1 }).lean();
-        
+
         if (watchlist.length === 0) return [];
 
-        const enriched = await Promise.all(
-            watchlist.map(async (item) => {
-                const details = await getStocksDetails(item.symbol);
-                if (!details) return null;
-                return {
+        // Sequential with 200ms gap to avoid 429 on free tier
+        const enriched: any[] = [];
+        for (const item of watchlist) {
+            const details = await getStocksDetails(item.symbol);
+            if (details) {
+                enriched.push({
                     ...item,
                     company: details.company,
                     priceFormatted: details.priceFormatted,
@@ -125,11 +124,12 @@ export async function getWatchlistWithData(): Promise<any[]> {
                     changePercent: details.changePercent,
                     marketCap: details.marketCapFormatted,
                     peRatio: details.peRatio,
-                };
-            })
-        );
+                });
+            }
+            await new Promise((r) => setTimeout(r, 200));
+        }
 
-        return JSON.parse(JSON.stringify(enriched.filter(Boolean)));
+        return JSON.parse(JSON.stringify(enriched));
     } catch (error) {
         console.error('getWatchlistWithData error:', error);
         return [];

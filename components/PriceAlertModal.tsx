@@ -6,9 +6,10 @@ import { createAlert } from '@/lib/actions/alerts';
 import {
     AlertType,
     AlertCondition,
-    AlertNotification,
+    AlertFrequency,
     MovingAveragePeriod,
     ALERT_TYPE_LABELS,
+    ALERT_FREQUENCY_LABELS,
 } from '@/types/alert';
 import { toast } from 'sonner';
 
@@ -42,12 +43,15 @@ export default function PriceAlertModal({
     const [maPeriod, setMaPeriod] = useState<MovingAveragePeriod>(50);
     const [volumeMultiplier, setVolumeMultiplier] = useState('2');
     const [earningsDays, setEarningsDays] = useState('2');
-    const [notification, setNotification] = useState<AlertNotification>('email');
+    const [frequency, setFrequency] = useState<AlertFrequency>('once_per_day');
     const [isPending, startTransition] = useTransition();
 
     if (!isOpen) return null;
 
     const condition = ALERT_TYPE_CONDITION[alertType];
+
+    // Earnings alerts only make sense firing once — lock frequency
+    const isEarnings = condition === 'earnings';
 
     const handleSubmit = () => {
         if (condition === 'price' && (!targetPrice || isNaN(parseFloat(targetPrice)))) {
@@ -66,7 +70,7 @@ export default function PriceAlertModal({
                 companyName,
                 alertType,
                 condition,
-                notification,
+                frequency: isEarnings ? 'once' : frequency,
                 ...(condition === 'price' && { targetPrice: parseFloat(targetPrice) }),
                 ...(condition === 'percent' && { targetPercent: parseFloat(targetPercent) }),
                 ...(condition === 'moving_average' && { maPeriod }),
@@ -92,6 +96,7 @@ export default function PriceAlertModal({
                 onClick={(e) => e.stopPropagation()}
                 className="relative bg-gray-800 rounded-[20px] w-[560px] px-[60px] py-[40px] flex flex-col gap-10 max-h-[90vh] overflow-y-auto scrollbar-hide-default"
             >
+                {/* Close */}
                 <button
                     onClick={onClose}
                     className="absolute top-5 right-5 text-gray-500 hover:text-white bg-transparent border-none cursor-pointer"
@@ -146,7 +151,8 @@ export default function PriceAlertModal({
                             </div>
                         </div>
 
-                        {/* Price target */}
+                        {/* Conditional input per alert type */}
+
                         {condition === 'price' && (
                             <div className="flex flex-col gap-1.5">
                                 <label className="form-label">Target Price</label>
@@ -165,7 +171,6 @@ export default function PriceAlertModal({
                             </div>
                         )}
 
-                        {/* Percent change */}
                         {condition === 'percent' && (
                             <div className="flex flex-col gap-1.5">
                                 <label className="form-label">
@@ -186,12 +191,11 @@ export default function PriceAlertModal({
                                     </span>
                                 </div>
                                 <p className="text-xs text-gray-500 mt-0.5">
-                                    Fires when {symbol} moves {alertType === 'percent_change_up' ? 'up' : 'down'} by this % in a single trading day
+                                    Fires when {symbol} moves {alertType === 'percent_change_up' ? 'up' : 'down'} by this % in a single day
                                 </p>
                             </div>
                         )}
 
-                        {/* Moving average */}
                         {condition === 'moving_average' && (
                             <div className="flex flex-col gap-1.5">
                                 <label className="form-label">Moving Average Period</label>
@@ -213,7 +217,6 @@ export default function PriceAlertModal({
                             </div>
                         )}
 
-                        {/* Volume spike */}
                         {condition === 'volume' && (
                             <div className="flex flex-col gap-1.5">
                                 <label className="form-label">Volume Multiplier</label>
@@ -237,7 +240,6 @@ export default function PriceAlertModal({
                             </div>
                         )}
 
-                        {/* Earnings proximity */}
                         {condition === 'earnings' && (
                             <div className="flex flex-col gap-1.5">
                                 <label className="form-label">Days before earnings</label>
@@ -256,27 +258,37 @@ export default function PriceAlertModal({
                                     <ChevronIcon />
                                 </div>
                                 <p className="text-xs text-gray-500 mt-0.5">
-                                    You'll get an email {earningsDays} day{parseInt(earningsDays) > 1 ? 's' : ''} before {symbol}'s next earnings report
+                                    You'll get one email {earningsDays} day{parseInt(earningsDays) > 1 ? 's' : ''} before {symbol}'s next earnings report
                                 </p>
                             </div>
                         )}
 
-                        {/* Notification */}
-                        <div className="flex flex-col gap-1.5">
-                            <label className="form-label">Notification</label>
-                            <div className="relative">
-                                <select
-                                    value={notification}
-                                    onChange={(e) => setNotification(e.target.value as AlertNotification)}
-                                    className="select-trigger appearance-none pr-10"
-                                >
-                                    <option value="email">Email</option>
-                                    <option value="push">Push</option>
-                                    <option value="both">Both</option>
-                                </select>
-                                <ChevronIcon />
+                        {/* Frequency — hidden for earnings (always once) */}
+                        {!isEarnings && (
+                            <div className="flex flex-col gap-1.5">
+                                <label className="form-label">Frequency</label>
+                                <div className="relative">
+                                    <select
+                                        value={frequency}
+                                        onChange={(e) => setFrequency(e.target.value as AlertFrequency)}
+                                        className="select-trigger appearance-none pr-10"
+                                    >
+                                        {(Object.entries(ALERT_FREQUENCY_LABELS) as [AlertFrequency, string][]).map(
+                                            ([value, label]) => (
+                                                <option key={value} value={value}>{label}</option>
+                                            )
+                                        )}
+                                    </select>
+                                    <ChevronIcon />
+                                </div>
+                                <p className="text-xs text-gray-500 mt-0.5">
+                                    {frequency === 'once' && 'Alert fires once, then stops automatically.'}
+                                    {frequency === 'once_per_day' && 'At most one email per day while condition holds.'}
+                                    {frequency === 'once_per_week' && 'At most one email per week while condition holds.'}
+                                    {frequency === 'every_time' && 'Emails every 5 minutes while condition is met — use carefully.'}
+                                </p>
                             </div>
-                        </div>
+                        )}
 
                         {/* Submit */}
                         <button

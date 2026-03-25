@@ -225,6 +225,420 @@ Return ONLY a valid JSON object with this exact structure:
 EXAMPLES:
 - Apple Inc. (AAPL) from Finnhub → {"tradingViewSymbol": "NASDAQ:AAPL", "confidence": "high", "reasoning": "Apple trades on NASDAQ as AAPL"}
 - Microsoft Corp (MSFT) from Finnhub → {"tradingViewSymbol": "NASDAQ:MSFT", "confidence": "high", "reasoning": "Microsoft trades on NASDAQ as MSFT"}
-- Barclays PLC (BARC.L) from Finnhub → {"tradingViewSymbol": "LSE:BARC", "confidence": "high", "reasoning": "Barclays trades on London Stock Exchange as BARC"}
+Your response must be valid JSON only. Do not include any other text.`;
 
-Your response must be valid JSON only. Do not include any other text.`
+export const PRICE_ABOVE_ALERT_PROMPT = `Generate HTML content for a price alert email triggered when a stock price rises above a target.
+This content will be inserted into a base email template.
+
+Stock data:
+Symbol: {{symbol}}
+Company: {{companyName}}
+Target Price: {{targetPrice}}
+Current Price: {{currentPrice}}
+Triggered At: {{triggeredAt}}
+
+CRITICAL FORMATTING REQUIREMENTS:
+- Return ONLY clean HTML - NO markdown, NO code blocks, NO backticks
+- Use CSS class + inline style combos exactly as shown below
+
+STRUCTURE:
+
+1. HEADER CARD:
+<div style="background-color: #138656; padding: 30px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+  <h2 class="mobile-news-title dark-text" style="margin: 0; font-size: 24px; font-weight: 600; color: #f8f9fa; line-height: 1.3;">Price Alert Triggered 🎉</h2>
+  <p class="mobile-text dark-text-secondary" style="margin: 8px 0 0 0; font-size: 16px; line-height: 1.6; color: #CCDADC;">Your target price for {{symbol}} was hit!</p>
+</div>
+
+2. PRICE CARD:
+<div class="dark-info-box" style="background-color: #212328; padding: 24px; margin: 20px 0; border-radius: 8px; text-align: center;">
+  <p class="mobile-text dark-text-secondary" style="margin: 0 0 8px 0; font-size: 16px; line-height: 1.6; color: #CCDADC;">Current Price</p>
+  <h3 class="mobile-news-title dark-text" style="margin: 0; font-size: 36px; font-weight: 600; color: #10B981; line-height: 1.3;">$\{{currentPrice}}</h3>
+</div>
+
+3. DETAILS CARD:
+<div class="dark-info-box" style="background-color: #212328; padding: 24px; margin: 20px 0; border-radius: 8px;">
+  <h4 class="dark-text" style="margin: 0 0 16px 0; font-size: 18px; font-weight: 600; color: #FFFFFF; line-height: 1.4;">What happened?</h4>
+  <p class="mobile-text dark-text-secondary" style="margin: 0 0 20px 0; font-size: 16px; line-height: 1.6; color: #CCDADC;"><strong style="color: #10B981;">{{symbol}}</strong> crossed your target of $\{{targetPrice}}.</p>
+  <ul style="margin: 16px 0 20px 0; padding-left: 0; margin-left: 0; list-style: none;">
+    <li class="dark-text-secondary" style="margin: 0 0 16px 0; padding: 0; font-size: 16px; line-height: 1.6; color: #CCDADC;">
+      <span style="color: #10B981; font-weight: bold; font-size: 20px; margin-right: 8px;">•</span>Target Price: $\{{targetPrice}}
+    </li>
+    <li class="dark-text-secondary" style="margin: 0 0 16px 0; padding: 0; font-size: 16px; line-height: 1.6; color: #CCDADC;">
+      <span style="color: #10B981; font-weight: bold; font-size: 20px; margin-right: 8px;">•</span>Current Price: $\{{currentPrice}}
+    </li>
+    <li class="dark-text-secondary" style="margin: 0 0 0 0; padding: 0; font-size: 16px; line-height: 1.6; color: #CCDADC;">
+      <span style="color: #10B981; font-weight: bold; font-size: 20px; margin-right: 8px;">•</span>Triggered: {{triggeredAt}}
+    </li>
+  </ul>
+</div>
+
+4. INSIGHT CARD:
+<div class="dark-info-box" style="background-color: #212328; padding: 24px; margin: 20px 0; border-radius: 8px;">
+  <h4 class="dark-text" style="margin: 0 0 12px 0; font-size: 18px; font-weight: 600; color: #f8f9fa; line-height: 1.4;">Opportunity</h4>
+  <div style="background-color: #141414; border: 1px solid #374151; padding: 15px; border-radius: 6px; margin: 16px 0;">
+    <p class="dark-text-secondary" style="margin: 0; font-size: 14px; color: #CCDADC; line-height: 1.4;">💡 <strong style="color: #10B981;">Bottom Line:</strong> Write one plain-English sentence of contextual advice about what this price move means for the investor.</p>
+  </div>
+</div>
+
+5. CTA:
+<div style="margin: 20px 0;">
+  <a href="https://credence.app/stock/{{symbol}}" style="color: #10B981; text-decoration: none; font-weight: 500; font-size: 14px;">View Stock →</a>
+</div>
+
+6. DIVIDER + FOOTER:
+<div style="border-top: 1px solid #374151; margin: 32px 0 24px 0;"></div>
+<p class="mobile-text dark-text-secondary" style="margin: 0; font-size: 14px; line-height: 1.6; color: #CCDADC;">Best,<br>The Credence Team</p>
+<div style="margin-top: 20px; text-align: center; font-size: 12px; color: #CCDADC;">
+  <a href="#" style="color: #10B981; text-decoration: none; font-weight: 500;">Unsubscribe</a> • <a href="https://credence.app" style="color: #10B981; text-decoration: none; font-weight: 500;">Visit Credence</a>
+</div>`;
+
+export const PRICE_BELOW_ALERT_PROMPT = `Generate HTML content for a price alert email triggered when a stock price falls below a target.
+This content will be inserted into a base email template.
+
+Stock data:
+Symbol: {{symbol}}
+Company: {{companyName}}
+Target Price: {{targetPrice}}
+Current Price: {{currentPrice}}
+Triggered At: {{triggeredAt}}
+
+CRITICAL FORMATTING REQUIREMENTS:
+- Return ONLY clean HTML - NO markdown, NO code blocks, NO backticks
+- Use CSS class + inline style combos exactly as shown below
+
+STRUCTURE:
+
+1. HEADER CARD:
+<div style="background-color: #DA3747; padding: 30px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+  <h2 class="mobile-news-title dark-text" style="margin: 0; font-size: 24px; font-weight: 600; color: #f8f9fa; line-height: 1.3;">Price Drop Alert 🚨</h2>
+  <p class="mobile-text dark-text-secondary" style="margin: 8px 0 0 0; font-size: 16px; line-height: 1.6; color: #CCDADC;">Your target price for {{symbol}} was hit!</p>
+</div>
+
+2. PRICE CARD:
+<div class="dark-info-box" style="background-color: #212328; padding: 24px; margin: 20px 0; border-radius: 8px; text-align: center;">
+  <p class="mobile-text dark-text-secondary" style="margin: 0 0 8px 0; font-size: 16px; line-height: 1.6; color: #CCDADC;">Current Price</p>
+  <h3 class="mobile-news-title dark-text" style="margin: 0; font-size: 36px; font-weight: 600; color: #FF495B; line-height: 1.3;">$\{{currentPrice}}</h3>
+</div>
+
+3. DETAILS CARD:
+<div class="dark-info-box" style="background-color: #212328; padding: 24px; margin: 20px 0; border-radius: 8px;">
+  <h4 class="dark-text" style="margin: 0 0 16px 0; font-size: 18px; font-weight: 600; color: #FFFFFF; line-height: 1.4;">What happened?</h4>
+  <p class="mobile-text dark-text-secondary" style="margin: 0 0 20px 0; font-size: 16px; line-height: 1.6; color: #CCDADC;"><strong style="color: #FF495B;">{{symbol}}</strong> dropped below your target of $\{{targetPrice}}.</p>
+  <ul style="margin: 16px 0 20px 0; padding-left: 0; margin-left: 0; list-style: none;">
+    <li class="dark-text-secondary" style="margin: 0 0 16px 0; padding: 0; font-size: 16px; line-height: 1.6; color: #CCDADC;">
+      <span style="color: #10B981; font-weight: bold; font-size: 20px; margin-right: 8px;">•</span>Target Price: $\{{targetPrice}}
+    </li>
+    <li class="dark-text-secondary" style="margin: 0 0 16px 0; padding: 0; font-size: 16px; line-height: 1.6; color: #CCDADC;">
+      <span style="color: #10B981; font-weight: bold; font-size: 20px; margin-right: 8px;">•</span>Current Price: $\{{currentPrice}}
+    </li>
+    <li class="dark-text-secondary" style="margin: 0 0 0 0; padding: 0; font-size: 16px; line-height: 1.6; color: #CCDADC;">
+      <span style="color: #10B981; font-weight: bold; font-size: 20px; margin-right: 8px;">•</span>Triggered: {{triggeredAt}}
+    </li>
+  </ul>
+</div>
+
+4. INSIGHT CARD:
+<div class="dark-info-box" style="background-color: #212328; padding: 24px; margin: 20px 0; border-radius: 8px;">
+  <h4 class="dark-text" style="margin: 0 0 12px 0; font-size: 18px; font-weight: 600; color: #f8f9fa; line-height: 1.4;">Manage Your Risk</h4>
+  <div style="background-color: #141414; border: 1px solid #374151; padding: 15px; border-radius: 6px; margin: 16px 0;">
+    <p class="dark-text-secondary" style="margin: 0; font-size: 14px; color: #CCDADC; line-height: 1.4;">💡 <strong style="color: #10B981;">Bottom Line:</strong> Write one plain-English sentence of risk management advice — what should the investor consider doing now.</p>
+  </div>
+</div>
+
+5. CTA:
+<div style="margin: 20px 0;">
+  <a href="https://credence.app/stock/{{symbol}}" style="color: #10B981; text-decoration: none; font-weight: 500; font-size: 14px;">View Stock →</a>
+</div>
+
+6. DIVIDER + FOOTER:
+<div style="border-top: 1px solid #374151; margin: 32px 0 24px 0;"></div>
+<p class="mobile-text dark-text-secondary" style="margin: 0; font-size: 14px; line-height: 1.6; color: #CCDADC;">Best,<br>The Credence Team</p>
+<div style="margin-top: 20px; text-align: center; font-size: 12px; color: #CCDADC;">
+  <a href="#" style="color: #10B981; text-decoration: none; font-weight: 500;">Unsubscribe</a> • <a href="https://credence.app" style="color: #10B981; text-decoration: none; font-weight: 500;">Visit Credence</a>
+</div>`;
+
+export const PERCENT_CHANGE_ALERT_PROMPT = `Generate HTML content for a daily percent change alert email.
+This content will be inserted into a base email template.
+
+Stock data:
+Symbol: {{symbol}}
+Company: {{companyName}}
+Direction: {{direction}}
+Change Percent: {{changePercent}}
+Current Price: {{currentPrice}}
+Triggered At: {{triggeredAt}}
+
+direction is either "up" or "down".
+
+CRITICAL FORMATTING REQUIREMENTS:
+- Return ONLY clean HTML - NO markdown, NO code blocks, NO backticks
+- If direction="up": header bg #138656, value color #10B981, title "Daily Gain Alert 📈", prefix "+"
+- If direction="down": header bg #DA3747, value color #FF495B, title "Daily Drop Alert 📉", prefix "-"
+
+STRUCTURE:
+
+1. HEADER CARD (conditional bg as above):
+<div style="background-color: [#138656 or #DA3747]; padding: 30px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+  <h2 class="mobile-news-title dark-text" style="margin: 0; font-size: 24px; font-weight: 600; color: #f8f9fa; line-height: 1.3;">[Title]</h2>
+  <p class="mobile-text dark-text-secondary" style="margin: 8px 0 0 0; font-size: 16px; line-height: 1.6; color: #CCDADC;">{{symbol}} moved {{changePercent}}% today</p>
+</div>
+
+2. CHANGE CARD:
+<div class="dark-info-box" style="background-color: #212328; padding: 24px; margin: 20px 0; border-radius: 8px; text-align: center;">
+  <p class="mobile-text dark-text-secondary" style="margin: 0 0 8px 0; font-size: 16px; line-height: 1.6; color: #CCDADC;">Today's Change</p>
+  <h3 class="mobile-news-title dark-text" style="margin: 0; font-size: 36px; font-weight: 600; color: [#10B981 or #FF495B]; line-height: 1.3;">[+/-]{{changePercent}}%</h3>
+</div>
+
+3. DETAILS CARD:
+<div class="dark-info-box" style="background-color: #212328; padding: 24px; margin: 20px 0; border-radius: 8px;">
+  <h4 class="dark-text" style="margin: 0 0 16px 0; font-size: 18px; font-weight: 600; color: #FFFFFF; line-height: 1.4;">What happened?</h4>
+  <ul style="margin: 16px 0 20px 0; padding-left: 0; margin-left: 0; list-style: none;">
+    <li class="dark-text-secondary" style="margin: 0 0 16px 0; padding: 0; font-size: 16px; line-height: 1.6; color: #CCDADC;">
+      <span style="color: #10B981; font-weight: bold; font-size: 20px; margin-right: 8px;">•</span>Symbol: <strong style="color: #10B981;">{{symbol}}</strong>
+    </li>
+    <li class="dark-text-secondary" style="margin: 0 0 16px 0; padding: 0; font-size: 16px; line-height: 1.6; color: #CCDADC;">
+      <span style="color: #10B981; font-weight: bold; font-size: 20px; margin-right: 8px;">•</span>Today's Change: {{changePercent}}%
+    </li>
+    <li class="dark-text-secondary" style="margin: 0 0 16px 0; padding: 0; font-size: 16px; line-height: 1.6; color: #CCDADC;">
+      <span style="color: #10B981; font-weight: bold; font-size: 20px; margin-right: 8px;">•</span>Current Price: \${{ currentPrice }}
+    </li>
+    <li class="dark-text-secondary" style="margin: 0 0 0 0; padding: 0; font-size: 16px; line-height: 1.6; color: #CCDADC;">
+      <span style="color: #10B981; font-weight: bold; font-size: 20px; margin-right: 8px;">•</span>Date: {{triggeredAt}}
+    </li>
+  </ul>
+</div>
+
+4. INSIGHT CARD:
+<div class="dark-info-box" style="background-color: #212328; padding: 24px; margin: 20px 0; border-radius: 8px;">
+  <h4 class="dark-text" style="margin: 0 0 12px 0; font-size: 18px; font-weight: 600; color: #f8f9fa; line-height: 1.4;">[Momentum if up / Caution if down]</h4>
+  <div style="background-color: #141414; border: 1px solid #374151; padding: 15px; border-radius: 6px; margin: 16px 0;">
+    <p class="dark-text-secondary" style="margin: 0; font-size: 14px; color: #CCDADC; line-height: 1.4;">💡 <strong style="color: #10B981;">Bottom Line:</strong> One plain-English sentence of contextual advice based on whether the move was up or down.</p>
+  </div>
+</div>
+
+5. CTA:
+<div style="margin: 20px 0;">
+  <a href="https://credence.app/stock/{{symbol}}" style="color: #10B981; text-decoration: none; font-weight: 500; font-size: 14px;">View Stock →</a>
+</div>
+
+6. DIVIDER + FOOTER:
+<div style="border-top: 1px solid #374151; margin: 32px 0 24px 0;"></div>
+<p class="mobile-text dark-text-secondary" style="margin: 0; font-size: 14px; line-height: 1.6; color: #CCDADC;">Best,<br>The Credence Team</p>
+<div style="margin-top: 20px; text-align: center; font-size: 12px; color: #CCDADC;">
+  <a href="#" style="color: #10B981; text-decoration: none; font-weight: 500;">Unsubscribe</a> • <a href="https://credence.app" style="color: #10B981; text-decoration: none; font-weight: 500;">Visit Credence</a>
+</div>`;
+
+export const MA_CROSS_ALERT_PROMPT = `Generate HTML content for a Moving Average cross alert email.
+This content will be inserted into a base email template.
+
+Stock data:
+Symbol: {{symbol}}
+Company: {{companyName}}
+MA Period: {{maPeriod}}
+Direction: {{direction}}
+Current Price: {{currentPrice}}
+MA Value: {{maValue}}
+Triggered At: {{triggeredAt}}
+
+direction is either "above" or "below".
+
+CRITICAL FORMATTING REQUIREMENTS:
+- Return ONLY clean HTML - NO markdown, NO code blocks, NO backticks
+- If direction="above": header bg #138656, title "MA Breakout 🚀", signal title "Bullish Signal"
+- If direction="below": header bg #DA3747, title "MA Breakdown ⚠️", signal title "Bearish Signal"
+
+STRUCTURE:
+
+1. HEADER CARD:
+<div style="background-color: [#138656 or #DA3747]; padding: 30px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+  <h2 class="mobile-news-title dark-text" style="margin: 0; font-size: 24px; font-weight: 600; color: #f8f9fa; line-height: 1.3;">[Title]</h2>
+  <p class="mobile-text dark-text-secondary" style="margin: 8px 0 0 0; font-size: 16px; line-height: 1.6; color: #CCDADC;">{{symbol}} crossed {{direction}} the {{maPeriod}}-day moving average</p>
+</div>
+
+2. PRICE CARD:
+<div class="dark-info-box" style="background-color: #212328; padding: 24px; margin: 20px 0; border-radius: 8px; text-align: center;">
+  <p class="mobile-text dark-text-secondary" style="margin: 0 0 8px 0; font-size: 16px; line-height: 1.6; color: #CCDADC;">Current Price</p>
+  <h3 class="mobile-news-title dark-text" style="margin: 0 0 12px 0; font-size: 36px; font-weight: 600; color: #f8f9fa; line-height: 1.3;">$\{{currentPrice}}</h3>
+  <p class="mobile-text dark-text-secondary" style="margin: 0; font-size: 14px; color: #CCDADC; line-height: 1.6;">{{maPeriod}}-day MA: $\{{maValue}}</p>
+</div>
+
+3. DETAILS CARD:
+<div class="dark-info-box" style="background-color: #212328; padding: 24px; margin: 20px 0; border-radius: 8px;">
+  <h4 class="dark-text" style="margin: 0 0 16px 0; font-size: 18px; font-weight: 600; color: #FFFFFF; line-height: 1.4;">Signal Details</h4>
+  <ul style="margin: 16px 0 20px 0; padding-left: 0; margin-left: 0; list-style: none;">
+    <li class="dark-text-secondary" style="margin: 0 0 16px 0; padding: 0; font-size: 16px; line-height: 1.6; color: #CCDADC;">
+      <span style="color: #10B981; font-weight: bold; font-size: 20px; margin-right: 8px;">•</span>Symbol: <strong style="color: #10B981;">{{symbol}}</strong>
+    </li>
+    <li class="dark-text-secondary" style="margin: 0 0 16px 0; padding: 0; font-size: 16px; line-height: 1.6; color: #CCDADC;">
+      <span style="color: #10B981; font-weight: bold; font-size: 20px; margin-right: 8px;">•</span>MA Period: {{maPeriod}}-day
+    </li>
+    <li class="dark-text-secondary" style="margin: 0 0 16px 0; padding: 0; font-size: 16px; line-height: 1.6; color: #CCDADC;">
+      <span style="color: #10B981; font-weight: bold; font-size: 20px; margin-right: 8px;">•</span>Current vs MA: \${{ currentPrice }} vs \${{ maValue }}
+    </li>
+    <li class="dark-text-secondary" style="margin: 0 0 0 0; padding: 0; font-size: 16px; line-height: 1.6; color: #CCDADC;">
+      <span style="color: #10B981; font-weight: bold; font-size: 20px; margin-right: 8px;">•</span>Date: {{triggeredAt}}
+    </li>
+  </ul>
+</div>
+
+4. SIGNAL CARD:
+<div class="dark-info-box" style="background-color: #212328; padding: 24px; margin: 20px 0; border-radius: 8px;">
+  <h4 class="dark-text" style="margin: 0 0 12px 0; font-size: 18px; font-weight: 600; color: #f8f9fa; line-height: 1.4;">[Bullish Signal or Bearish Signal]</h4>
+  <div style="background-color: #141414; border: 1px solid #374151; padding: 15px; border-radius: 6px; margin: 16px 0;">
+    <p class="dark-text-secondary" style="margin: 0; font-size: 14px; color: #CCDADC; line-height: 1.4;">💡 <strong style="color: #10B981;">Bottom Line:</strong> One plain-English sentence explaining what crossing the <strong>{{maPeriod}}-day moving average</strong> means for the investor.</p>
+  </div>
+</div>
+
+5. CTA:
+<div style="margin: 20px 0;">
+  <a href="https://credence.app/stock/{{symbol}}" style="color: #10B981; text-decoration: none; font-weight: 500; font-size: 14px;">View Chart →</a>
+</div>
+
+6. DIVIDER + FOOTER:
+<div style="border-top: 1px solid #374151; margin: 32px 0 24px 0;"></div>
+<p class="mobile-text dark-text-secondary" style="margin: 0; font-size: 14px; line-height: 1.6; color: #CCDADC;">Best,<br>The Credence Team</p>
+<div style="margin-top: 20px; text-align: center; font-size: 12px; color: #CCDADC;">
+  <a href="#" style="color: #10B981; text-decoration: none; font-weight: 500;">Unsubscribe</a> • <a href="https://credence.app" style="color: #10B981; text-decoration: none; font-weight: 500;">Visit Credence</a>
+</div>`;
+
+export const VOLUME_SPIKE_ALERT_PROMPT = `Generate HTML content for a volume spike alert email.
+This content will be inserted into a base email template.
+
+Stock data:
+Symbol: {{symbol}}
+Company: {{companyName}}
+Current Volume: {{currentVolume}}
+30-day Avg Volume: {{avgVolume}}
+Multiplier: {{multiplier}}
+Current Price: {{currentPrice}}
+Triggered At: {{triggeredAt}}
+
+CRITICAL FORMATTING REQUIREMENTS:
+- Return ONLY clean HTML - NO markdown, NO code blocks, NO backticks
+
+STRUCTURE:
+
+1. HEADER CARD:
+<div style="background-color: #5862FF; padding: 30px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+  <h2 class="mobile-news-title dark-text" style="margin: 0; font-size: 24px; font-weight: 600; color: #f8f9fa; line-height: 1.3;">Volume Spike Detected 📊</h2>
+  <p class="mobile-text dark-text-secondary" style="margin: 8px 0 0 0; font-size: 16px; line-height: 1.6; color: #CCDADC;">{{symbol}} is seeing unusual trading activity</p>
+</div>
+
+2. VOLUME CARD:
+<div class="dark-info-box" style="background-color: #212328; padding: 24px; margin: 20px 0; border-radius: 8px; text-align: center;">
+  <p class="mobile-text dark-text-secondary" style="margin: 0 0 8px 0; font-size: 16px; line-height: 1.6; color: #CCDADC;">Today's Volume</p>
+  <h3 class="mobile-news-title dark-text" style="margin: 0; font-size: 36px; font-weight: 600; color: #f8f9fa; line-height: 1.3;">{{currentVolume}}</h3>
+</div>
+
+3. DETAILS CARD:
+<div class="dark-info-box" style="background-color: #212328; padding: 24px; margin: 20px 0; border-radius: 8px;">
+  <h4 class="dark-text" style="margin: 0 0 16px 0; font-size: 18px; font-weight: 600; color: #FFFFFF; line-height: 1.4;">Spike Details</h4>
+  <ul style="margin: 16px 0 20px 0; padding-left: 0; margin-left: 0; list-style: none;">
+    <li class="dark-text-secondary" style="margin: 0 0 16px 0; padding: 0; font-size: 16px; line-height: 1.6; color: #CCDADC;">
+      <span style="color: #10B981; font-weight: bold; font-size: 20px; margin-right: 8px;">•</span>Symbol: <strong style="color: #10B981;">{{symbol}}</strong>
+    </li>
+    <li class="dark-text-secondary" style="margin: 0 0 16px 0; padding: 0; font-size: 16px; line-height: 1.6; color: #CCDADC;">
+      <span style="color: #10B981; font-weight: bold; font-size: 20px; margin-right: 8px;">•</span>Today's Volume: {{currentVolume}}
+    </li>
+    <li class="dark-text-secondary" style="margin: 0 0 16px 0; padding: 0; font-size: 16px; line-height: 1.6; color: #CCDADC;">
+      <span style="color: #10B981; font-weight: bold; font-size: 20px; margin-right: 8px;">•</span>30-day Avg Volume: {{avgVolume}}
+    </li>
+    <li class="dark-text-secondary" style="margin: 0 0 16px 0; padding: 0; font-size: 16px; line-height: 1.6; color: #CCDADC;">
+      <span style="color: #10B981; font-weight: bold; font-size: 20px; margin-right: 8px;">•</span>Multiplier: {{multiplier}}× average
+    </li>
+    <li class="dark-text-secondary" style="margin: 0 0 0 0; padding: 0; font-size: 16px; line-height: 1.6; color: #CCDADC;">
+      <span style="color: #10B981; font-weight: bold; font-size: 20px; margin-right: 8px;">•</span>Current Price: \${{ currentPrice }}
+    </li>
+  </ul>
+</div>
+
+4. INSIGHT CARD:
+<div class="dark-info-box" style="background-color: #212328; padding: 24px; margin: 20px 0; border-radius: 8px;">
+  <h4 class="dark-text" style="margin: 0 0 12px 0; font-size: 18px; font-weight: 600; color: #f8f9fa; line-height: 1.4;">What This Means</h4>
+  <div style="background-color: #141414; border: 1px solid #374151; padding: 15px; border-radius: 6px; margin: 16px 0;">
+    <p class="dark-text-secondary" style="margin: 0; font-size: 14px; color: #CCDADC; line-height: 1.4;">💡 <strong style="color: #10B981;">Bottom Line:</strong> Two plain-English sentences explaining what a volume spike signals and why it often precedes a significant price move.</p>
+  </div>
+</div>
+
+5. CTA:
+<div style="margin: 20px 0;">
+  <a href="https://credence.app/stock/{{symbol}}" style="color: #10B981; text-decoration: none; font-weight: 500; font-size: 14px;">View Stock →</a>
+</div>
+
+6. DIVIDER + FOOTER:
+<div style="border-top: 1px solid #374151; margin: 32px 0 24px 0;"></div>
+<p class="mobile-text dark-text-secondary" style="margin: 0; font-size: 14px; line-height: 1.6; color: #CCDADC;">Best,<br>The Credence Team</p>
+<div style="margin-top: 20px; text-align: center; font-size: 12px; color: #CCDADC;">
+  <a href="#" style="color: #10B981; text-decoration: none; font-weight: 500;">Unsubscribe</a> • <a href="https://credence.app" style="color: #10B981; text-decoration: none; font-weight: 500;">Visit Credence</a>
+</div>`;
+
+export const EARNINGS_PROXIMITY_ALERT_PROMPT = `Generate HTML content for an earnings proximity alert email.
+This content will be inserted into a base email template.
+
+Stock data:
+Symbol: {{symbol}}
+Company: {{companyName}}
+Earnings Date: {{earningsDate}}
+Days Until: {{daysUntil}}
+Current Price: {{currentPrice}}
+
+CRITICAL FORMATTING REQUIREMENTS:
+- Return ONLY clean HTML - NO markdown, NO code blocks, NO backticks
+
+STRUCTURE:
+
+1. HEADER CARD:
+<div style="background-color: #FF8243; padding: 30px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+  <h2 class="mobile-news-title dark-text" style="margin: 0; font-size: 24px; font-weight: 600; color: #f8f9fa; line-height: 1.3;">Earnings Coming Up 📅</h2>
+  <p class="mobile-text dark-text-secondary" style="margin: 8px 0 0 0; font-size: 16px; line-height: 1.6; color: #CCDADC;">{{companyName}} reports earnings in {{daysUntil}} day(s)</p>
+</div>
+
+2. DATE CARD:
+<div class="dark-info-box" style="background-color: #212328; padding: 24px; margin: 20px 0; border-radius: 8px; text-align: center;">
+  <p class="mobile-text dark-text-secondary" style="margin: 0 0 8px 0; font-size: 16px; line-height: 1.6; color: #CCDADC;">Earnings Date</p>
+  <h3 class="mobile-news-title dark-text" style="margin: 0; font-size: 30px; font-weight: 600; color: #f8f9fa; line-height: 1.3;">{{earningsDate}}</h3>
+</div>
+
+3. DETAILS CARD:
+<div class="dark-info-box" style="background-color: #212328; padding: 24px; margin: 20px 0; border-radius: 8px;">
+  <h4 class="dark-text" style="margin: 0 0 16px 0; font-size: 18px; font-weight: 600; color: #FFFFFF; line-height: 1.4;">Event Details</h4>
+  <ul style="margin: 16px 0 20px 0; padding-left: 0; margin-left: 0; list-style: none;">
+    <li class="dark-text-secondary" style="margin: 0 0 16px 0; padding: 0; font-size: 16px; line-height: 1.6; color: #CCDADC;">
+      <span style="color: #10B981; font-weight: bold; font-size: 20px; margin-right: 8px;">•</span>Symbol: <strong style="color: #10B981;">{{symbol}}</strong>
+    </li>
+    <li class="dark-text-secondary" style="margin: 0 0 16px 0; padding: 0; font-size: 16px; line-height: 1.6; color: #CCDADC;">
+      <span style="color: #10B981; font-weight: bold; font-size: 20px; margin-right: 8px;">•</span>Earnings Date: {{earningsDate}}
+    </li>
+    <li class="dark-text-secondary" style="margin: 0 0 16px 0; padding: 0; font-size: 16px; line-height: 1.6; color: #CCDADC;">
+      <span style="color: #10B981; font-weight: bold; font-size: 20px; margin-right: 8px;">•</span>Days Until: {{daysUntil}} day(s)
+    </li>
+    <li class="dark-text-secondary" style="margin: 0 0 0 0; padding: 0; font-size: 16px; line-height: 1.6; color: #CCDADC;">
+      <span style="color: #10B981; font-weight: bold; font-size: 20px; margin-right: 8px;">•</span>Current Price: \${{ currentPrice }}
+    </li>
+  </ul>
+</div>
+
+4. PREP CARD:
+<div class="dark-info-box" style="background-color: #212328; padding: 24px; margin: 20px 0; border-radius: 8px;">
+  <h4 class="dark-text" style="margin: 0 0 12px 0; font-size: 18px; font-weight: 600; color: #f8f9fa; line-height: 1.4;">Be Prepared</h4>
+  <div style="background-color: #141414; border: 1px solid #374151; padding: 15px; border-radius: 6px; margin: 16px 0;">
+    <p class="dark-text-secondary" style="margin: 0; font-size: 14px; color: #CCDADC; line-height: 1.4;">💡 <strong style="color: #10B981;">Bottom Line:</strong> Two plain-English sentences about earnings volatility and why the investor should review their position before the report date.</p>
+  </div>
+  <ul style="margin: 16px 0 0 0; padding-left: 0; margin-left: 0; list-style: none;">
+    <li class="dark-text-secondary" style="margin: 0; padding: 0; font-size: 16px; line-height: 1.6; color: #CCDADC;">
+      <span style="color: #FF8243; font-weight: bold; font-size: 20px; margin-right: 8px;">•</span>One practical tip for managing risk ahead of earnings — written in plain English.
+    </li>
+  </ul>
+</div>
+
+5. CTA:
+<div style="margin: 20px 0;">
+  <a href="https://credence.app/stock/{{symbol}}" style="color: #10B981; text-decoration: none; font-weight: 500; font-size: 14px;">View Stock →</a>
+</div>
+
+6. DIVIDER + FOOTER:
+<div style="border-top: 1px solid #374151; margin: 32px 0 24px 0;"></div>
+<p class="mobile-text dark-text-secondary" style="margin: 0; font-size: 14px; line-height: 1.6; color: #CCDADC;">Best,<br>The Credence Team</p>
+<div style="margin-top: 20px; text-align: center; font-size: 12px; color: #CCDADC;">
+  <a href="#" style="color: #10B981; text-decoration: none; font-weight: 500;">Unsubscribe</a> • <a href="https://credence.app" style="color: #10B981; text-decoration: none; font-weight: 500;">Visit Credence</a>
+</div>`;
