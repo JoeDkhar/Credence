@@ -186,7 +186,7 @@ function average(arr: number[]): number {
 
 export const checkPriceAlerts = inngest.createFunction(
     { id: 'check-price-alerts' },
-    { cron: '*/5 * * * *' },
+    { cron: '* * * * *' },
     async ({ step }) => {
         // 1. Fetch all active alerts using .lean()
         const alerts: IAlert[] = await step.run('fetch-active-alerts', async () => {

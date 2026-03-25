@@ -5,6 +5,7 @@ import { Star } from "lucide-react";
 import { WatchlistTable } from "@/components/WatchlistTable";
 import { AlertsList } from '@/components/AlertsList';
 import { getUserAlerts } from '@/lib/actions/alerts';
+import MarketSummaryFooter from "@/components/MarketSummaryFooter";
 
 const WatchlistPage = async () => {
     const [initialStocks, watchlist, alerts] = await Promise.all([
@@ -27,35 +28,28 @@ const WatchlistPage = async () => {
     }
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'row', gap: '20px', alignItems: 'flex-start' }}>
-
-            {/* LEFT COLUMN — title row + table stacked, takes remaining width */}
-            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <h1 className="watchlist-title">Watchlist</h1>
-                    <SearchCommand initialStocks={initialStocks} renderAs="button" label="Add Stock" />
+        <div className="flex flex-col min-h-screen">
+            <div className="flex flex-col xl:flex-row gap-8 items-start w-full">
+                {/* LEFT COLUMN — title row + table stacked, takes remaining width */}
+                <div className="flex-1 min-w-0 flex flex-col gap-6 w-full">
+                    <div className="flex items-center justify-between">
+                        <h1 className="watchlist-title text-3xl font-bold text-white">Watchlist</h1>
+                        <SearchCommand initialStocks={initialStocks} renderAs="button" label="Add Stock" />
+                    </div>
+                    <WatchlistTable watchlist={watchlist} />
                 </div>
-                <WatchlistTable watchlist={watchlist} />
-            </div>
 
-            {/* RIGHT COLUMN — "Alerts" title + card panel, fixed 400px */}
-            <div style={{ width: '400px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <h2 style={{
-                        fontFamily: "'PP Neue Montreal', -apple-system, sans-serif",
-                        fontWeight: 700,
-                        fontSize: '24px',
-                        lineHeight: '32px',
-                        letterSpacing: '-0.02em',
-                        color: '#FFFFFF',
-                        margin: 0,
-                    }}>
-                        Alerts
+                {/* RIGHT COLUMN — "Alerts" title + card panel, fixed 400px on large screens */}
+                <div className="w-full xl:w-[400px] flex-shrink-0 flex flex-col gap-6">
+                    <h2 className="text-2xl font-bold text-white tracking-tight" style={{ fontFamily: "'PP Neue Montreal', sans-serif" }}>
+                        Active Alerts
                     </h2>
+                    <AlertsList alerts={alerts} />
                 </div>
-                <AlertsList alerts={alerts} />
             </div>
 
+            {/* Market Summary Footer */}
+            <MarketSummaryFooter />
         </div>
     );
 };
